@@ -4,7 +4,8 @@
   "description": "Cycle.js router driver with less configuration and more fun",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js | tap-format-spec"
+    "test": "node test.js | tap-format-spec",
+    "lint": "eslint index.js test.js --cache"
   },
   "repository": {
     "type": "git",
@@ -24,11 +25,13 @@
   },
   "homepage": "https://github.com/scottcorgan/cycle-location#readme",
   "dependencies": {
+    "as-array": "2.0.0",
     "ramda": "0.19.1",
     "route-parser": "0.0.4",
     "rx": "4.0.7"
   },
   "devDependencies": {
+    "@tap-format/spec": "0.2.0",
     "babel-eslint": "4.1.8",
     "babel-plugin-transform-object-rest-spread": "6.3.13",
     "babel-plugin-transform-react-jsx": "6.4.0",
@@ -36,6 +39,9 @@
     "babelify": "7.2.0",
     "eslint": "1.10.3",
     "eslint-plugin-cycle": "1.0.2",
-    "eslint-plugin-lw": "1.0.1"
+    "eslint-plugin-lw": "1.0.1",
+    "history": "2.0.0",
+    "standard": "6.0.5",
+    "tape": "4.4.0"
   }
 }

@@ -1,17 +1,23 @@
-import path from 'path'
-import Route from 'route-parser'
-import curry from 'ramda/src/curry'
-import memoize from 'ramda/src/memoize'
-import {Observable, ReplaySubject} from 'rx'
+'use strict'
+
+let path = require('path')
+let Route = require('route-parser')
+let curry = require('ramda/src/curry')
+let memoize = require('ramda/src/memoize')
+let Rx = require('rx')
+let asArray = require('as-array')
+
+let Observable = Rx.Observable
+let ReplaySubject = Rx. ReplaySubject
 
 const BACK = 'BACK'
 const REDIRECT = 'REDIRECT'
 
-let getParams = memoize((r, pathname) => (new Route(r)).match(pathname))
-let matchesRoute = memoize(curry((r, location) => !!getParams(r, location.pathname)))
+let getParams = (r, pathname) => (new Route(r)).match(pathname)
+let matchesRoute = curry((r, location) => !!getParams(r, location.pathname))
 let isObservable = val => (typeof val === 'object' && typeof val.subscribe === 'function')
 
-export default function makeRouterDriver (history) {
+exports.makeRouterDriver = function makeRouterDriver (history) {
 
   return sink$ => {
 
@@ -41,31 +47,19 @@ export default function makeRouterDriver (history) {
       })
 
     return {
-      ...makeRoute(rootSource$, '/'),
-      redirect: (...values) => Observable.just({
-        type: REDIRECT,
-        payload: values
-      }),
-      goBack: () => Observable.just({
-        type: BACK
-      })
+      location$: rootSource$,
+      route: (nextRoutePath) => makeRoute(rootSource$, '/', nextRoutePath),
+      redirect: () => Observable.just({type: REDIRECT, payload: asArray(arguments)}),
+      goBack: () => Observable.just({type: BACK})
     }
   }
 }
 
-function makeRoute (source$, baseRoutePath, routePath = '/') {
+function makeRoute (source$, baseRoutePath, routePath) {
 
   let fullRoutePath = path.join(baseRoutePath, routePath)
-  let filteredSource$ = source$.filter(matchesRoute(fullRoutePath))
-
-  let location$ = filteredSource$
-    .map(location => {
-
-      return {
-        ...location,
-        params: getParams(fullRoutePath, location.pathname)
-      }
-    })
+  let location$ = source$.filter(matchesRoute(fullRoutePath))
+  let params$ = location$.map(location => getParams(fullRoutePath, location.pathname))
 
   function route (nextRoutePath) {
 
@@ -78,6 +72,7 @@ function makeRoute (source$, baseRoutePath, routePath = '/') {
 
   return {
     location$,
+    params$,
     route
   }
 }
