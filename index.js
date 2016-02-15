@@ -55,8 +55,7 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
       route: (nextRoutePath) => makeRoute(rootSource$, '/', nextRoutePath),
       redirect: pathanme => Observable.just({type: REDIRECT, payload: pathanme}),
       goBack: () => Observable.just({type: BACK}),
-      goForward: () => Observable.just({type: FORWARD}),
-      createHref: pathname => Observable.just({type: CREATE_HREF, payload: pathname})
+      goForward: () => Observable.just({type: FORWARD})
     }
   }
 }
