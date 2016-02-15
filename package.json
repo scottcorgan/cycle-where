@@ -25,7 +25,6 @@
   },
   "homepage": "https://github.com/scottcorgan/cycle-location#readme",
   "dependencies": {
-    "as-array": "2.0.0",
     "ramda": "0.19.1",
     "route-parser": "0.0.4",
     "rx": "4.0.7"

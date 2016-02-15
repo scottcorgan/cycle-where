@@ -7,7 +7,6 @@ let cycleLocation = require('./')
 
 let makeRouteDriver = cycleLocation.makeRouterDriver
 
-
 test('matches pathnames with no params', t => {
 
   t.plan(2)
@@ -109,6 +108,30 @@ test('root location$ stream', t => {
   history.push('/second')
 })
 
-test('routing to path')
-test('redirect')
-test('goBack')
+test('routing to various paths', t => {
+
+  t.plan(5)
+
+  let history = H.useQueries(H.createMemoryHistory)()
+  let driver = makeRouteDriver(history)
+  let sink$ = new Rx.Subject()
+  let router = driver(sink$)
+
+  router.route('/test').location$
+    .forEach(location =>
+      t.equal(location.pathname, '/test', 'routed'))
+
+  router.route('/redirected').location$
+    .forEach(location =>
+      t.equal(location.pathname, '/redirected', 'redirected to path'))
+
+  router.route('/forward').location$
+    .forEach(location =>
+      t.equal(location.pathname, '/forward', 'forward'))
+
+  sink$.onNext('/test')
+  sink$.onNext(router.redirect('/redirected'))
+  sink$.onNext('/forward')
+  sink$.onNext(router.goBack())
+  sink$.onNext(router.goForward())
+})

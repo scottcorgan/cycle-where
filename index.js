@@ -3,14 +3,14 @@
 let path = require('path')
 let Route = require('route-parser')
 let curry = require('ramda/src/curry')
-let memoize = require('ramda/src/memoize')
+// let memoize = require('ramda/src/memoize')
 let Rx = require('rx')
-let asArray = require('as-array')
 
 let Observable = Rx.Observable
 let ReplaySubject = Rx. ReplaySubject
 
 const BACK = 'BACK'
+const FORWARD = 'FORWARD'
 const REDIRECT = 'REDIRECT'
 
 let getParams = (r, pathname) => (new Route(r)).match(pathname)
@@ -36,8 +36,12 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
             return history.goBack()
           }
 
+          case FORWARD: {
+            return history.goForward()
+          }
+
           case REDIRECT: {
-            return history.replace(...action.payload)
+            return history.replace(action.payload)
           }
 
           default: {
@@ -49,8 +53,10 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
     return {
       location$: rootSource$,
       route: (nextRoutePath) => makeRoute(rootSource$, '/', nextRoutePath),
-      redirect: () => Observable.just({type: REDIRECT, payload: asArray(arguments)}),
-      goBack: () => Observable.just({type: BACK})
+      redirect: pathanme => Observable.just({type: REDIRECT, payload: pathanme}),
+      goBack: () => Observable.just({type: BACK}),
+      goForward: () => Observable.just({type: FORWARD}),
+      createHref: pathname => Observable.just({type: CREATE_HREF, payload: pathname})
     }
   }
 }
