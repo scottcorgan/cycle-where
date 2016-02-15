@@ -3,7 +3,7 @@
 let path = require('path')
 let Route = require('route-parser')
 let curry = require('ramda/src/curry')
-// let memoize = require('ramda/src/memoize')
+let memoize = require('ramda/src/memoize')
 let Rx = require('rx')
 
 let Observable = Rx.Observable
@@ -13,8 +13,8 @@ const BACK = 'BACK'
 const FORWARD = 'FORWARD'
 const REDIRECT = 'REDIRECT'
 
-let getParams = (r, pathname) => (new Route(r)).match(pathname)
-let matchesRoute = curry((r, location) => !!getParams(r, location.pathname))
+let getParams = memoize((r, pathname) => (new Route(r)).match(pathname))
+let matchesRoute = memoize(curry((r, location) => !!getParams(r, location.pathname)))
 let isObservable = val => (typeof val === 'object' && typeof val.subscribe === 'function')
 
 exports.makeRouterDriver = function makeRouterDriver (history) {
