@@ -1,6 +1,6 @@
 {
   "name": "cycle-location",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Cycle.js router driver with less configuration and more fun",
   "main": "index.js",
   "scripts": {
