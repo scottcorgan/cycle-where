@@ -1,10 +1,11 @@
 'use strict'
 
-let path = require('path')
-let Route = require('route-parser')
-let curry = require('ramda/src/curry')
-let memoize = require('ramda/src/memoize')
 let Rx = require('rx')
+let pathnameMatch = require('pathname-match')
+let pathToRegexp = require('path-to-regexp')
+let memoize = require('mem')
+let urlJoin = require('url-join')
+let zipObject = require('zip-object')
 
 let Observable = Rx.Observable
 let ReplaySubject = Rx. ReplaySubject
@@ -13,16 +14,26 @@ const BACK = 'BACK'
 const FORWARD = 'FORWARD'
 const REDIRECT = 'REDIRECT'
 
-let getParams = memoize((r, pathname) => (new Route(r)).match(pathname))
-let matchesRoute = memoize(curry((r, location) => !!getParams(r, location.pathname)))
+let getParams = memoize((route, originalPath) => {
+
+    let pathDetails = []
+    let pathRegexp = pathToRegexp(route, pathDetails)
+    let regexpResults = pathRegexp.exec(pathnameMatch(originalPath))
+    let paramNames = pathDetails.map(detail => detail.name)
+
+    return !!regexpResults
+        ? zipObject(paramNames, regexpResults.slice(1))
+        : undefined
+})
+let matchesRoute = memoize((r, pathname) => !!getParams(r, pathname))
 let isObservable = val => (typeof val === 'object' && typeof val.subscribe === 'function')
 
 exports.makeRouterDriver = function makeRouterDriver (history) {
 
   return sink$ => {
 
-    let rootSource$ = new ReplaySubject(1)
-    history.listen(location => rootSource$.onNext(location))
+    let source$ = new ReplaySubject(1)
+    history.listen(location => source$.onNext(location))
 
     let customActions$ = sink$.filter(isObservable).mergeAll()
     let pushActions$ = sink$.filter(value => !isObservable(value))
@@ -51,8 +62,8 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
       })
 
     return {
-      location$: rootSource$,
-      route: (nextRoutePath) => makeRoute(rootSource$, '/', nextRoutePath),
+      location$: source$,
+      route: nextRoutePath => makeRoute(source$, '/', nextRoutePath),
       redirect: pathanme => Observable.just({type: REDIRECT, payload: pathanme}),
       goBack: () => Observable.just({type: BACK}),
       goForward: () => Observable.just({type: FORWARD})
@@ -62,15 +73,15 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
 
 function makeRoute (source$, baseRoutePath, routePath) {
 
-  let fullRoutePath = path.join(baseRoutePath, routePath)
-  let location$ = source$.filter(matchesRoute(fullRoutePath))
+  let fullRoutePath = urlJoin(baseRoutePath, routePath)
+  let location$ = source$.filter(location => matchesRoute(fullRoutePath, location.pathname))
   let params$ = location$.map(location => getParams(fullRoutePath, location.pathname))
 
   function route (nextRoutePath) {
 
     return makeRoute(
-      source$.filter(matchesRoute(`${baseRoutePath}*next`)),
-      path.join(baseRoutePath, routePath),
+      source$.filter(location => matchesRoute(`${baseRoutePath}*:next`, location.pathname)),
+      urlJoin(baseRoutePath, routePath),
       nextRoutePath
     )
   }
