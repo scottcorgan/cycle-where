@@ -1,7 +1,7 @@
 {
-  "name": "cycle-location",
-  "version": "0.2.0",
-  "description": "Cycle.js router driver with less configuration and more fun",
+  "name": "cycle-where",
+  "version": "0.3.0",
+  "description": "Cycle.js router driver with less configuration, more map(), and more fun",
   "main": "index.js",
   "scripts": {
     "test": "node test.js | tap-format-spec",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scottcorgan/cycle-location.git"
+    "url": "git+https://github.com/scottcorgan/cycle-where.git"
   },
   "keywords": [
     "cycle",
@@ -21,9 +21,9 @@
   "author": "Scott Corgan",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/scottcorgan/cycle-location/issues"
+    "url": "https://github.com/scottcorgan/cycle-where/issues"
   },
-  "homepage": "https://github.com/scottcorgan/cycle-location#readme",
+  "homepage": "https://github.com/scottcorgan/cycle-where#readme",
   "peerDependencies": {
     "rx": "*"
   },
