@@ -13,6 +13,10 @@ const REDIRECT = 'REDIRECT'
 
 let isObservable = val => (typeof val === 'object' && typeof val.subscribe === 'function')
 
+exports.redirect = pathanme => Observable.of({type: REDIRECT, payload: pathanme})
+exports.goBack = () => Observable.of({type: BACK})
+exports.goForward = () => Observable.of({type: FORWARD})
+
 exports.makeRouterDriver = function makeRouterDriver (history) {
 
   return sink$ => {
@@ -20,8 +24,16 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
     let source$ = new ReplaySubject(1)
     history.listen(location => source$.onNext(location))
 
-    let customActions$ = sink$.filter(isObservable).mergeAll()
     let pushActions$ = sink$.filter(value => !isObservable(value))
+
+    // TODO: this is weird that redirect() might be nested in observables
+    // but, sometimes it is, so, well ya, there ya go
+    let customActions$ = sink$
+      .filter(isObservable)
+      .mergeAll()
+      .flatMap(action =>
+        isObservable(action) ? action : Observable.of(action))
+
     let basename$ = Rx.Observable.just('/')
 
     pushActions$.forEach(pathname => history.push(pathname))
@@ -52,9 +64,6 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
       location$: source$,
       basename$,
       route: nextRoutePath => makeRoute(source$, '/', nextRoutePath),
-      redirect: pathanme => Observable.of({type: REDIRECT, payload: pathanme}), // TODO: need to put these on nested routes too
-      goBack: () => Observable.of({type: BACK}),
-      goForward: () => Observable.of({type: FORWARD}),
       makeHref: p => Observable.of(p)
     }
   }

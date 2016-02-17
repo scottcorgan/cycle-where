@@ -3,9 +3,12 @@
 let test = require('tape')
 let H = require('history')
 let Rx = require('rx')
-let cycleLocation = require('./')
+let cycleWhere = require('./')
 
-let makeRouterDriver = cycleLocation.makeRouterDriver
+let makeRouterDriver = cycleWhere.makeRouterDriver
+let redirect = cycleWhere.redirect
+let goBack = cycleWhere.goBack
+let goForward = cycleWhere.goForward
 
 test('matches pathnames with no params', t => {
 
@@ -108,9 +111,9 @@ test('root location$ stream', t => {
   history.push('/second')
 })
 
-test('routing to various paths', t => {
+test('routing to various paths, forward and back', t => {
 
-  t.plan(5)
+  t.plan(4)
 
   let history = H.useQueries(H.createMemoryHistory)()
   let driver = makeRouterDriver(history)
@@ -121,19 +124,14 @@ test('routing to various paths', t => {
     .forEach(location =>
       t.equal(location.pathname, '/test', 'routed'))
 
-  router.route('/redirected').location$
-    .forEach(location =>
-      t.equal(location.pathname, '/redirected', 'redirected to path'))
-
   router.route('/forward').location$
     .forEach(location =>
       t.equal(location.pathname, '/forward', 'forward'))
 
   sink$.onNext('/test')
-  sink$.onNext(router.redirect('/redirected'))
   sink$.onNext('/forward')
-  sink$.onNext(router.goBack())
-  sink$.onNext(router.goForward())
+  sink$.onNext(goBack())
+  sink$.onNext(goForward())
 })
 
 test('basename$', t => {
@@ -159,6 +157,29 @@ test('basename$', t => {
   history.push('/')
   history.push('/test')
   history.push('/test/123')
+})
+
+test('redirect()', t => {
+
+  t.plan(2)
+
+  let history = H.useQueries(H.createMemoryHistory)()
+  let driver = makeRouterDriver(history)
+  let sink$ = new Rx.Subject()
+  let router = driver(sink$)
+
+  router.route('/redirected').location$
+    .forEach(location =>
+      t.equal(location.pathname, '/redirected', 'redirected to path'))
+
+  router.route('/redirect-in-observable').location$
+    .forEach(location =>
+      t.equal(location.pathname, '/redirect-in-observable', 'redirected to path in nested observable'))
+
+  // throw new Error('Test why flatMap has to be used for redirect() sometimes')
+
+  sink$.onNext(redirect('/redirected'))
+  sink$.onNext(Rx.Observable.of(redirect('/redirect-in-observable')))
 })
 
 test('makeHref()', t => {
