@@ -50,8 +50,7 @@ export default function Main ({router, DOM}) {
     .map(params =>
       div([
         `Showing user: ${params.userId}`,
-        a({href: '/users'}, 'See all Users')
-      ]))
+        a({href: '/users'}, 'See all Users')]))
 
   return {
     router: navigate$,
