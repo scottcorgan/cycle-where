@@ -33,7 +33,6 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
       .mergeAll()
       .flatMap(action =>
         isObservable(action) ? action : Observable.of(action))
-
     let basename$ = Rx.Observable.just('/')
 
     pushActions$.forEach(pathname => history.push(pathname))
