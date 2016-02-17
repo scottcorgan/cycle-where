@@ -5,14 +5,14 @@ let H = require('history')
 let Rx = require('rx')
 let cycleLocation = require('./')
 
-let makeRouteDriver = cycleLocation.makeRouterDriver
+let makeRouterDriver = cycleLocation.makeRouterDriver
 
 test('matches pathnames with no params', t => {
 
   t.plan(2)
 
   let history = H.createMemoryHistory()
-  let driver = makeRouteDriver(history)
+  let driver = makeRouterDriver(history)
   let router = driver(new Rx.Subject())
 
   router.route('/').location$
@@ -33,7 +33,7 @@ test('matches nested pathnames with no params', t => {
   t.plan(2)
 
   let history = H.createMemoryHistory()
-  let driver = makeRouteDriver(history)
+  let driver = makeRouterDriver(history)
   let router = driver(new Rx.Subject())
 
   let nestedRouteOneLevel = router.route('/nested').route('/test')
@@ -57,7 +57,7 @@ test('matches pathnames with params', t => {
   t.plan(2)
 
   let history = H.createMemoryHistory()
-  let driver = makeRouteDriver(history)
+  let driver = makeRouterDriver(history)
   let router = driver(new Rx.Subject())
 
   router.route('/:id').params$
@@ -77,7 +77,7 @@ test('matches pathnames with params on nested routes', t => {
   t.plan(1)
 
   let history = H.createMemoryHistory()
-  let driver = makeRouteDriver(history)
+  let driver = makeRouterDriver(history)
   let router = driver(new Rx.Subject())
 
   router.route('/test').route('/:id').params$
@@ -92,7 +92,7 @@ test('root location$ stream', t => {
   t.plan(2)
 
   let history = H.createMemoryHistory()
-  let driver = makeRouteDriver(history)
+  let driver = makeRouterDriver(history)
   let router = driver(new Rx.Subject())
   let first$ = router.location$.take(1)
   let second$ = router.location$.slice(1)
@@ -113,7 +113,7 @@ test('routing to various paths', t => {
   t.plan(5)
 
   let history = H.useQueries(H.createMemoryHistory)()
-  let driver = makeRouteDriver(history)
+  let driver = makeRouterDriver(history)
   let sink$ = new Rx.Subject()
   let router = driver(sink$)
 
