@@ -135,3 +135,56 @@ test('routing to various paths', t => {
   sink$.onNext(router.goBack())
   sink$.onNext(router.goForward())
 })
+
+test('basename$', t => {
+
+  t.plan(3)
+
+  let history = H.createMemoryHistory()
+  let driver = makeRouterDriver(history)
+  let router = driver(new Rx.Subject())
+
+  router.basename$
+    .forEach(basename =>
+      t.equal(basename, '/', 'root'))
+
+  router.route('/test').basename$
+    .forEach(basename =>
+      t.equal(basename, '/test', 'one level deep'))
+
+  router.route('/test/:id').basename$
+    .forEach(basename =>
+      t.equal(basename, '/test/123', 'with params'))
+
+  history.push('/')
+  history.push('/test')
+  history.push('/test/123')
+})
+
+test('makeHref()', t => {
+
+  t.plan(3)
+
+  let history = H.createMemoryHistory()
+  let driver = makeRouterDriver(history)
+  let router = driver(new Rx.Subject())
+
+  let href$ = router.makeHref('/hey')
+  let nestedHref$ = router.route('/test').makeHref('/123')
+  let paramsHref$ = router.route('/test/:id').makeHref('/456')
+
+  href$
+    .forEach(href =>
+      t.equal(href, '/hey', 'root route'))
+
+  nestedHref$
+    .forEach(nestedHref =>
+      t.equal(nestedHref, '/test/123', 'nested route'))
+
+  paramsHref$
+    .forEach(paramsHref =>
+      t.equal(paramsHref, '/test/123/456', 'route with params'))
+
+  history.push('/test')
+  history.push('/test/123')
+})

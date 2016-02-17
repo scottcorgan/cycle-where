@@ -22,6 +22,7 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
 
     let customActions$ = sink$.filter(isObservable).mergeAll()
     let pushActions$ = sink$.filter(value => !isObservable(value))
+    let basename$ = Rx.Observable.just('/')
 
     pushActions$.forEach(pathname => history.push(pathname))
     customActions$
@@ -46,12 +47,15 @@ exports.makeRouterDriver = function makeRouterDriver (history) {
         }
       })
 
+    // TODO: get rid of duplication with makeRoute() here
     return {
       location$: source$,
+      basename$,
       route: nextRoutePath => makeRoute(source$, '/', nextRoutePath),
-      redirect: pathanme => Observable.just({type: REDIRECT, payload: pathanme}),
-      goBack: () => Observable.just({type: BACK}),
-      goForward: () => Observable.just({type: FORWARD})
+      redirect: pathanme => Observable.of({type: REDIRECT, payload: pathanme}), // TODO: need to put these on nested routes too
+      goBack: () => Observable.of({type: BACK}),
+      goForward: () => Observable.of({type: FORWARD}),
+      makeHref: p => Observable.of(p)
     }
   }
 }
@@ -61,6 +65,7 @@ function makeRoute (source$, baseRoutePath, routePath) {
   let fullRoutePath = urlJoin(baseRoutePath, routePath)
   let location$ = source$.filter(location => routeParams(fullRoutePath, location.pathname))
   let params$ = location$.map(location => routeParams(fullRoutePath, location.pathname))
+  let basename$ = location$.map(location => location.pathname)
 
   function route (nextRoutePath) {
 
@@ -71,9 +76,18 @@ function makeRoute (source$, baseRoutePath, routePath) {
     )
   }
 
+  function makeHref (pathname) {
+
+    return basename$
+      .map(basename =>
+        urlJoin(basename, pathname))
+  }
+
   return {
     location$,
+    basename$,
     params$,
-    route
+    route,
+    makeHref
   }
 }
